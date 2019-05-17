@@ -43,53 +43,6 @@ function getMyId() {
     });
 }
 
-function postNewComment() {
-    const content = document.getElementById('new_comment').value;
-    const event_id = document.getElementById('event_id').value;
-    $.ajax({
-        url: '/comments/create_new',
-        contentType: 'application/json',
-        type: 'post',
-        data: JSON.stringify({content: content, event: event_id}),
-        success: function (dataR) {
-            alert(dataR);
-            alert('Successfully!');
-            hideOfflineWarning();
-            loadComments(event_id);
-        },
-        // the request to the server has failed. Let's show the cached data
-        error: function (xhr, status, error) {
-            showOfflineWarning();
-            // cleanStoriesEvents();
-            // getCachedData();
-        }
-    });
-}
-
-function loadComments(event_id) {
-    console.log('Loading comments');
-    $.ajax({
-        url: '/comments/get_comments_by_event_id',
-        dataType: 'json',
-        type: 'get',
-        data: {event_id: event_id},
-        success: function (dataR) {
-            console.log('Received comments:::::::' + dataR);
-            // cleanStoriesEvents();
-            showStoriesOrComments(dataR);
-            // showEvents(dataR);
-            // storeCachedData(user_id, dataR);
-            hideOfflineWarning();
-        },
-        // the request to the server has failed. Let's show the cached data
-        error: function (xhr, status, error) {
-            showOfflineWarning();
-            // cleanStoriesEvents();
-            // getCachedData();
-        }
-    });
-}
-
 function loadEvents() {
     console.log('Loading events');
     $.ajax({
@@ -100,7 +53,7 @@ function loadEvents() {
         success: function (dataR) {
             console.log('Received events:::::::' + dataR);
             cleanStoriesEvents();
-            // showStoriesOrComments(dataR);
+            // showStories(dataR);
             showEvents(dataR);
             // storeCachedData(user_id, dataR);
             hideOfflineWarning();
@@ -136,7 +89,7 @@ function loadStoriesById(user_id) {
         data: user,
         success: function (dataR) {
             cleanStoriesEvents();
-            showStoriesOrComments(dataR);
+            showStories(dataR);
             showOfflineData();
             storeCachedData(user_id, dataR);
             hideOfflineWarning();
@@ -189,7 +142,14 @@ function showEvent(dataR) {
         };
         event.style.cursor = 'pointer';
 
+        //TODO May need a good alternative
         let pictures = showPictures(dataR);
+        let imgDisplay = 'block';
+        if (!pictures) {
+            console.log('No pictures!');
+            pictures = '';
+            imgDisplay = 'none';
+        }
 
         //TODO Need to use JavaScript rather than innerHTML
         event.innerHTML =
@@ -197,7 +157,7 @@ function showEvent(dataR) {
             '<p class="media-body pb-3 mb-0 lh-125 border-bottom-0 border-gray">' +
             '<strong class="d-block text-gray-dark">' + dataR.title + '</strong>' +
             showContent(dataR) + '<br>' +
-            pictures +
+            '<img src="' + pictures + '" alt="" style="display: ' + imgDisplay + ';">' + '<br>' +
             showLocation(dataR) +
             '</p>' +
             '<p class="media-body pb-3 mb-0 small lh-125 border-bottom-0 border-gray text-right">' +
@@ -208,60 +168,65 @@ function showEvent(dataR) {
 }
 
 /**
- * given the stories or comments returned by the server,
+ * given the stories returned by the server,
  * it adds some rows of stories to the stories div
- * @param data the data returned by the server
+ * @param stories the data returned by the server
  */
-function showStoriesOrComments(data) {
-    if (data && data.length > 0) {
-        for (let datum of data) {
-            console.log('Showing::::::::' + datum);
-            showStoryOrComment(datum);
-        }
+function showStories(stories) {
+    if (stories && stories.length > 0) {
+        for (let story of stories)
+            showStory(story);
     }
 }
 
-function showStoryOrComment(datum) {
-    if (document.getElementById('stories_comments') != null) {
+function showStory(story) {
+    if (document.getElementById('stories') != null) {
         $.ajax({
-            url: '/users/get_name_by_id/' + datum.user_id,
+            url: '/users/get_name_by_id/' + story.user_id,
             type: 'get',
             success: function (name) {
-                showStoryOrCommentWithName(datum, name);
+                showStoryWithName(story, name);
             },
             error: function (xhr, status, error) {
-                showStoryOrCommentWithName(datum, '');
+                showStoryWithName(story, '');
                 showOfflineWarning();
             }
         });
     }
 }
 
-function showStoryOrCommentWithName(dataR, name) {
-    if (document.getElementById('stories_comments') != null) {
-        const datum = document.createElement('div');
-        // appending a new datum
-        document.getElementById('stories_comments').appendChild(datum);
+function showStoryWithName(dataR, name) {
+    if (document.getElementById('stories') != null) {
+        const story = document.createElement('div');
+        // appending a new story
+        document.getElementById('stories').appendChild(story);
         // formatting by applying css classes
-        datum.classList.add('media');
-        datum.classList.add('my-3');
-        datum.classList.add('p-3');
-        datum.classList.add('bg-white');
-        datum.classList.add('rounded');
-        datum.classList.add('shadow-lg');
-        datum.classList.add('row');
+        story.classList.add('media');
+        story.classList.add('my-3');
+        story.classList.add('p-3');
+        story.classList.add('bg-white');
+        story.classList.add('rounded');
+        story.classList.add('shadow-lg');
+        story.classList.add('row');
 
+        //TODO May need a good alternative
         let pictures = showPictures(dataR);
+        let imgDisplay = 'block';
+        if (!pictures) {
+            console.log('No pictures!');
+            pictures = '';
+            imgDisplay = 'none';
+        }
 
         //TODO Need to use JavaScript rather than innerHTML
-        datum.innerHTML =
+        story.innerHTML =
             '<div class="col-12">' +
             '<img class="mr-2 rounded-circle" src="/images/avatars/' + dataR.user_id + '" width="48" height="48" alt="avatar">' +
             '<p class="media-body pb-3 mb-0 small lh-125 border-bottom-0 border-gray">' +
             '<strong class="d-block text-gray-dark">' + name + ' @' + dataR.user_id + '</strong>' +
-            showDate(dataR) + '<br>' +
+            new Date(dataR.date).toUTCString() + '<br>' +
             showContent(dataR) + '<br>' +
-            pictures +
+            '<img src="' + pictures + '" alt="" style="display: ' + imgDisplay + ';">' + '<br>' +
             showLocation(dataR) +
             '</p>' +
             '</div>';

@@ -63,7 +63,7 @@ function getCachedDataOffline(next) {
                 console.log('get offline stories');
                 next(stories);
                 // for (let story of stories)
-                //     showStoryOrComment(story);
+                //     showStory(story);
             } else {
                 return JSON.parse(localStorage.getItem(user_id_new));
             }
@@ -89,7 +89,7 @@ function showOfflineData() {
                 // JSON.parse(stories);
                 for (let story of stories) {
                     story.user_id = user_id_new;
-                    showStoryOrComment(story);
+                    showStory(story);
                 }
             }
         });
@@ -132,7 +132,7 @@ function getCachedData(user_id) {
         }).then(function (stories) {
             if (stories && stories.length > 0) {
                 for (let story of stories)
-                    showStoryOrComment(story);
+                    showStory(story);
             } else {
                 getCachedDataFromLocalStorage(user_id);
             }
@@ -149,28 +149,28 @@ function getCachedData(user_id) {
 function getCachedDataFromLocalStorage(user_id) {
     const stories = JSON.parse(localStorage.getItem(user_id));
     if (stories == null)
-        showStoryOrComment({user_id: 'Ins', text: 'You don\'t have any stories!'});
+        showStory({user_id: 'Ins', text: 'You don\'t have any stories!'});
     else {
-        showStoriesOrComments(stories);
+        showStories(stories);
     }
 }
 
 function searchByKeyword(keyword) {
     $.ajax({
-        url: '/stories/search', //TODO
+        url: '/stories/searchMongo', //TODO
         contentType: 'application/json',
         type: 'POST',
         data: JSON.stringify({keyword: keyword}),
         success: function (dataR) {
             cleanStoriesEvents();
             hideOfflineWarning();
-            showStoriesOrComments(dataR)
+            showStories(dataR)
         },
         // the request to the server has failed. Let's show the cached data
         error: function (xhr, status, error) {
             showOfflineWarning();
             cleanStoriesEvents();
-            // offlineSearch(keyword);
+            offlineSearch(keyword);
         }
     });
 }
@@ -187,8 +187,8 @@ function offlineSearch(keyword) {
                     cleanStoriesEvents();
                     for (let story of stories) {
                         console.log(story);
-                        if (story.text.toLowerCase().search(keyword.toLowerCase()) > -1)
-                            showStoryOrComment(story);
+                        if (story.content.toLowerCase().search(keyword.toLowerCase()) > -1)
+                            showStory(story);
                     }
                 });
         });
@@ -196,11 +196,11 @@ function offlineSearch(keyword) {
         const user = JSON.parse(localStorage.getItem('user'));
         const stories = JSON.parse(localStorage.getItem(user.user_id));
         if (stories == null)
-            showStoryOrComment({user_id: 'Ins', text: 'You don\'t have any stories!'});
+            showStory({user_id: 'Ins', content: 'You don\'t have any stories!'});
         else {
             for (let story of stories) {
-                if (story.text.toLowerCase().search(keyword.toLowerCase()) > -1)
-                    showStoryOrComment(story);
+                if (story.content.toLowerCase().search(keyword.toLowerCase()) > -1)
+                    showStory(story);
             }
         }
     }
@@ -221,15 +221,11 @@ function showContent(dataR) {
 }
 
 function showPictures(dataR) {
-    let pictures = '';
-    if (dataR.pictures == null && dataR.content === undefined) {
-    } else {
-        console.log(dataR.pictures);
-        for (let pic of dataR.pictures) {
-            pictures += ('<img src="' + pic + '" alt=""><br>');
-        }
-    }
-    return pictures;
+    if (dataR.pictures.length > 0) {
+        console.log(dataR.pictures[0]);
+        return dataR.pictures[0];
+    } else
+        return null;
 }
 
 function showLocation(dataR) {
