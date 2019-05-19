@@ -16,7 +16,7 @@ exports.new = async (req, res) => {
 exports.getStoriesById = async (req, res) => {
     const user_id = req.body.user_id || req.query.user_id;
     if (user_id == null) {
-        res.status(403).send('No data sent!')
+        return res.status(403).send('No data sent!')
     }
     console.log('Querying get_stories_by_id: ' + user_id);
 
@@ -25,6 +25,16 @@ exports.getStoriesById = async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     console.log(JSON.stringify(userWithStories.stories));
     res.send(JSON.stringify(userWithStories.stories));
+};
+
+exports.getAllStories = async (req, res) => {
+    console.log('Querying get_all_stories_by_id');
+
+    const stories = await Story.find().sort({date: -1});
+
+    res.setHeader('Content-Type', 'application/json');
+    console.log(JSON.stringify(stories));
+    res.send(JSON.stringify(stories));
 };
 
 exports.createNew = async (req, res) => {

@@ -3,25 +3,11 @@
 <head>
     <% include ../layout/head.ejs %>
 </head>
-<body onload="initIns();">
+<body onload="initIns();loadComments('<%- e._id %>');">
 <header>
     <% include ../layout/header.ejs %>
 </header>
 <div class="container text-center">
-
-    <div class="row mb-3">
-        <div class="col text-right">
-            <button class="btn btn-primary" onclick="loadEvents()">
-                Refresh
-            </button>
-            <a class="btn btn-primary" href="/events/new" role="button" title="New Event">
-                New Event
-            </a>
-            <a class="btn btn-primary" href="/logout" role="button" title="Log Out">
-                Log out
-            </a>
-        </div>
-    </div>
 
     <div class="offline_div text-center" id="offline_div" style="display: none">You are offline</div>
 
@@ -45,15 +31,15 @@
         <h3>Comments</h3>
     </div>
 
-    <div class="form-group mt-3">
+    <form class="form-group mt-3">
         <label for="new_comment">Create Comment</label>
         <textarea name="content" class="form-control mb-3" rows="5" cols="20" id="new_comment"
                   placeholder="Share your thought"></textarea>
-        <button type="submit" class="btn btn-primary">Post</button>
-    </div>
+        <input type="hidden" name="event" id="event_id" value="<%- e._id %>">
+        <button type="submit" class="btn btn-primary" onclick="postNewComment()">Post</button>
+    </form>
 
-    <div class="media my-3 p-3 bg-white rounded shadow-lg row">
-
+    <div id="stories_comments">
     </div>
 
 </div>
